@@ -70,7 +70,7 @@ gameplay guessNumber letters = do
     -- Otherwise handle the guess
     else do
 
-        -- let result = stringFromChar( takeAGuess guess )
+        -- let result = charToString( takeAGuess guess )
         let result = (takeAGuess guess "hangman")
 
         if result == goalword then
@@ -98,8 +98,8 @@ gameplay guessNumber letters = do
 
 
 -- | 
-stringFromChar :: Char -> String
-stringFromChar x = [x]
+charToString :: Char -> String
+charToString x = [x]
 
 
 -- | 
@@ -111,20 +111,20 @@ hideWord (x:xs) = "*" ++ (hideWord xs)
 -- | (NOT USED)
 printLetters :: [Char] -> String
 printLetters [] = ""
-printLetters (x:xs) = (stringFromChar x) ++ ", " ++ (printLetters xs)
+printLetters (x:xs) = (charToString x) ++ ", " ++ (printLetters xs)
 
 -- | (NOT USED)
 printCharArray1 :: [Char] -> String
 printCharArray1 array
     | array == [] = ""
-    | length array == 1 = (stringFromChar (head array))
-    | otherwise = (stringFromChar (head array)) ++ ", " ++ (printCharArray1 (tail array))
+    | length array == 1 = (charToString (head array))
+    | otherwise = (charToString (head array)) ++ ", " ++ (printCharArray1 (tail array))
 
 
 printCharArray :: [Char] -> String
 printCharArray (x:xs)
-    | xs == [] = (stringFromChar x)
-    | otherwise = (stringFromChar x) ++ ", " ++ (printCharArray xs)
+    | xs == [] = (charToString x)
+    | otherwise = (charToString x) ++ ", " ++ (printCharArray xs)
 
 -- | 
 takeAGuess :: String -> String -> String
@@ -149,11 +149,12 @@ checkIfGuessed c (x:xs)
 
 
 -- | Check if a given character is in the string
+-- | guess, goal word, partly hidden word
 guessChar :: Char -> String -> String
-guessChar guess word
---guessedLetters = guessedLetters ++ [guess]
-    | guess == 'a' = "You guessed a"
-    | otherwise = "You guessed something else" 
+guessChar guess [] [] = ""
+guessChar guess (x:xs) (y:ys)
+    -- Letters match
+    | guess = x = (charToString )
 
 
 
