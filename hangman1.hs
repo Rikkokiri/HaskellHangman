@@ -51,13 +51,16 @@ hangman = do
 gameplay :: Int -> [Char] -> IO ()
 gameplay guessNumber letters = do
 
-    if 
+    if length letters /= 0 then
+        print("Guessed letters: " ++ printCharArray letters)
+    else
+        -- DO nothing special
+        print("No letters guessed yet.") -- REMOVE?
 
     putStrLn "Guess a letter or the entire word: "
     guess <- getLine
     print("You guessed: " ++ guess) -- REMOVE
 
-    let guessedLetters = ['a']
 
     -- Check if guess was a character and if that character has already been guessed
     if (length guess == 1) && (checkIfGuessed (head guess) letters) then do
@@ -104,6 +107,24 @@ hideWord :: String -> String
 hideWord [] = ""
 hideWord (x:xs) = "*" ++ (hideWord xs)
 
+
+-- | (NOT USED)
+printLetters :: [Char] -> String
+printLetters [] = ""
+printLetters (x:xs) = (stringFromChar x) ++ ", " ++ (printLetters xs)
+
+-- | (NOT USED)
+printCharArray1 :: [Char] -> String
+printCharArray1 array
+    | array == [] = ""
+    | length array == 1 = (stringFromChar (head array))
+    | otherwise = (stringFromChar (head array)) ++ ", " ++ (printCharArray1 (tail array))
+
+
+printCharArray :: [Char] -> String
+printCharArray (x:xs)
+    | xs == [] = (stringFromChar x)
+    | otherwise = (stringFromChar x) ++ ", " ++ (printCharArray xs)
 
 -- | 
 takeAGuess :: String -> String -> String
