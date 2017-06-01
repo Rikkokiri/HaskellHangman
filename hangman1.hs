@@ -14,14 +14,12 @@
 --      3.2 If player gives string longer than 1 char, they are
 --          guessing the whole word
 --          3.2.1 Just compare the word
--- 
--- 
 
 -- IMPORTS --
 import System.IO
 import Data.List
 import Data.Char
-
+import Control.Monad
 
 -- Predefined word
 goalword = "hangman"
@@ -38,47 +36,51 @@ hangman = do
     print("This is the Hangman game")
 
     -- Cover the letters in the goal word
-    print("Guess the word: " ++ (hideWord goalword))
-
+    let toBeGuessed = (hideWord goalword)
     let guessedLetters = [] :: [Char]
 
+    print("Guess the word: " ++ toBeGuessed)
+
     -- Move to guessing the word
-    gameplay 0 guessedLetters
+    gameplay 0 toBeGuessed guessedLetters
 
 
 
 -- | Run the actual gameplay
-gameplay :: Int -> [Char] -> IO ()
-gameplay guessNumber letters = do
+gameplay :: Int -> String -> [Char] -> IO ()
+gameplay guessNumber word letters = do
 
-    if length letters /= 0 then
-        print("Guessed letters: " ++ printCharArray letters)
-    else
-        -- DO nothing special
-        print("No letters guessed yet.") -- REMOVE?
+    -- Show the player the letters they've guessed already
+    when (letters /= []) (print("Guessed letters: " ++ printCharArray letters))
 
-    putStrLn "Guess a letter or the entire word: "
+    putStr "Guess a letter or the entire word: "
     guess <- getLine
+
     print("You guessed: " ++ guess) -- REMOVE
 
 
     -- Check if guess was a character and if that character has already been guessed
+    -- if so, prompt the player to guess again
     if (length guess == 1) && (checkIfGuessed (head guess) letters) then do
         putStrLn "You have already guessed that! Guess again!"
-        gameplay guessNumber letters
+        gameplay guessNumber word letters
         
-    -- Otherwise handle the guess
+    -- If the guess is new, hangle the guess
     else do
 
-        -- let result = charToString( takeAGuess guess )
-        let result = (takeAGuess guess "hangman")
+        -- Call the guessing function
+        let result = (takeAGuess guess word)
 
         if result == goalword then
-            putStrLn "You win!"
+            putStrLn "That's correct! YOU WIN!"
             -- THE GAME ENDS. PLAYER WINS.
 
         -- If guess is wrong...
         else do
+
+            -- Print the current state of the word
+            putStrLn result
+
             -- Print the drawing
             let drawing = drawHangman (succ guessNumber)
             putStrLn drawing
@@ -89,12 +91,12 @@ gameplay guessNumber letters = do
 
             -- If there are guesses left, continue the game
             else do
-                putStrLn ("You have " ++ (show (7 - (succ guessNumber))) ++ " guesses left")
+                putStrLn ("\nYou have " ++ (show (7 - (succ guessNumber))) ++ " guesses left\n")
 
                 if(length guess == 1) then
-                    gameplay (succ guessNumber) (letters ++ guess)
+                    gameplay (succ guessNumber) result (letters ++ guess)
                 else
-                    gameplay (succ guessNumber) letters
+                    gameplay (succ guessNumber) result letters
 
 
 -- | 
@@ -122,14 +124,14 @@ printCharArray1 array
 
 
 printCharArray :: [Char] -> String
-printCharArray (x:xs)
-    | xs == [] = (charToString x)
-    | otherwise = (charToString x) ++ ", " ++ (printCharArray xs)
+printCharArray [] = ""
+printCharArray [x] = (charToString x)
+printCharArray (x:xs) = (charToString x) ++ ", " ++ (printCharArray xs)
 
 -- | 
 takeAGuess :: String -> String -> String
 takeAGuess guess word
-    | length guess == 1 = guessChar (head guess) word
+    | length guess == 1 = guessChar (head guess) goalword word
     | otherwise = guessWord guess
 
 
@@ -150,11 +152,13 @@ checkIfGuessed c (x:xs)
 
 -- | Check if a given character is in the string
 -- | guess, goal word, partly hidden word
-guessChar :: Char -> String -> String
+guessChar :: Char -> String -> String -> String
 guessChar guess [] [] = ""
 guessChar guess (x:xs) (y:ys)
     -- Letters match
-    | guess = x = (charToString )
+    | guess == x = (charToString x) ++ guessChar guess xs ys
+    | y `elem` ['a'..'z'] = (charToString y) ++ guessChar guess xs ys
+    | otherwise = "*" ++ guessChar guess xs ys
 
 
 
