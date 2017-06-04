@@ -85,8 +85,8 @@ guessWord guess
 guessChar :: Char -> String -> String -> String
 guessChar guess [] [] = ""
 guessChar guess (x:xs) (y:ys)
-    | guess == x = (charToString (toUpper x)) ++ guessChar guess xs ys
-    | elem y ['A'..'Z'] = (charToString y) ++ guessChar guess xs ys
+    | guess == x = (charToString x) ++ guessChar guess xs ys
+    | elem y ['a'..'z'] = (charToString y) ++ guessChar guess xs ys
     | otherwise = "*" ++ guessChar guess xs ys
 
 
@@ -95,11 +95,23 @@ charToString :: Char -> String
 charToString x = [x]
 
 
+-- | Convert a string to lower case
+lowerString :: String -> String
+lowerString s = map toLower s
+
+
+validLetter :: Char -> Bool
+validLetter l
+    | elem l ['A'..'Z'] = True
+    | elem l ['a'..'z'] = True
+    | otherwise = False
+
+
 -- | Print a list separated with commas
 printArray :: [Char] -> String
 printArray [] = ""
 printArray [x] = (charToString x)
-printArray (x:xs) = (charToString x) ++ ", " ++ (printCharArray xs)
+printArray (x:xs) = (charToString x) ++ ", " ++ (printArray xs)
 
 
 -- | Start the game
@@ -121,9 +133,9 @@ hangman = do
 validateGuess :: String -> [String] -> String
 validateGuess guess guesses
     -- Check that guessed char was a letter
-    | (length guess == 1) && not (isLetter (head guess)) = "Your guess " ++ guess ++ " is a not a letter. Guess again!"
+    | (length guess == 1) && not (validLetter (head guess)) = "Your guess " ++ guess ++ " is a not a valid (a-z) letter. Guess again!"
     -- Check if the given guess has already been guessed
-    | (elem guess guesses) = "You have already guessed that! Guess again!"
+    | (elem (lowerString guess) guesses) = "You have already guessed that! Guess again!"
     | otherwise = ""
 
 
@@ -171,5 +183,5 @@ gameplay guessNumber word guesses = do
             -- If there are guesses left, continue the game
             else do
                 putStrLn (guessesLeftMsg guessNumber)
-                gameplay (succ guessNumber) result (guesses ++ [guess])
+                gameplay (succ guessNumber) result (guesses ++ [lowerString guess])
 
