@@ -11,7 +11,7 @@ goalword = "hangman"
 
 -- | Rules of the game
 rules :: String
-rules = "    H A N G M A N   G A M E \n ===============================\n I'm thinking of a word and you must guess what it is. You may guess either letters or if you're daring, the entire word.\n If you guess wrong, you'll get one step closer to death. The ninth failure will kill you. Good luck!\n"
+rules = "    H A N G M A N   G A M E \n===============================\nI'm thinking of a word and you must guess what it is. You may guess either guesses or if you're daring, the entire word.\nIf you guess wrong, you'll get one step closer to death. The ninth failure will kill you. Good luck!\n"
 
 -- | 
 hideWord :: String -> String
@@ -52,92 +52,102 @@ maxGuesses :: Int
 maxGuesses = length drawing
 
 
--- | Print the message of how many guesses are left (TODO FIX! The message is not guessses left, but failures)
+-- | Print the message of how many times the player can still guess wrong before dying
 guessesLeftMsg :: Int -> String
 guessesLeftMsg guessNumber = ("You have " ++ (show (maxGuesses - (succ guessNumber))) ++ " wrong guesses left")
 
 
--- | Guessing. If the length of @param guess == 1, then 
+{- |
+    Guessing.
+    If @param guess is longer than 1 character, call the player wants to guess a word.
+    Otherwise the player is guessing a character.
+
+    @param word is the partially solved word
+-}
 takeAGuess :: String -> String -> String
 takeAGuess guess word
     | length guess > 1 = guessWord guess
     | otherwise = guessChar (head guess) goalword word
 
 
--- | Guessing the entire word. If the guess is right, return the right word. Else return "Unfortunately..."
+-- | Guessing the entire word. If the guess is right, return the right word. Else return a message about guessing wrong.
 guessWord :: String -> String
 guessWord guess
     | guess == goalword = goalword
     | otherwise = "Unfortunately your guess " ++ guess ++ " was wrong"
 
 
--- | Check if a given character is in the string
--- | @param guess
--- | @param (x:xs)
--- | @param (y:ys) TODO
+{- | Check if a given character is in the string
+     @param guess  - The guessed character
+     @param (x:xs) - The correct word
+     @param (y:ys) - Partially solved word
+-}
 guessChar :: Char -> String -> String -> String
 guessChar guess [] [] = ""
 guessChar guess (x:xs) (y:ys)
-    | guess == x = (charToString x) ++ guessChar guess xs ys
-    | elem y ['a'..'z'] = (charToString y) ++ guessChar guess xs ys
+    | guess == x = (charToString (toUpper x)) ++ guessChar guess xs ys
+    | elem y ['A'..'Z'] = (charToString y) ++ guessChar guess xs ys
     | otherwise = "*" ++ guessChar guess xs ys
 
 
--- | Convert Char to String
+-- | Convert a char to a string
 charToString :: Char -> String
 charToString x = [x]
 
 
--- | Print a list of Chars separated with commas
-printCharArray :: [Char] -> String
-printCharArray [] = ""
-printCharArray [x] = (charToString x)
-printCharArray (x:xs) = (charToString x) ++ ", " ++ (printCharArray xs)
+-- | Print a list separated with commas
+printArray :: [Char] -> String
+printArray [] = ""
+printArray [x] = (charToString x)
+printArray (x:xs) = (charToString x) ++ ", " ++ (printCharArray xs)
 
 
 -- | Start the game
 hangman = do
 
-    -- TODO Tell player the rules of the game
     putStrLn rules
 
-    -- Cover the letters in the goal word
+    -- Cover the guesses in the goal word
     let toBeGuessed = (hideWord goalword)
-    let guessedLetters = [] :: [Char]
+    --    let guessedguesses = [] :: [Char]
 
     print("Guess the word: " ++ toBeGuessed)
 
     -- Move to guessing the word
-    gameplay 0 toBeGuessed guessedLetters
+    gameplay 0 toBeGuessed []
 
 
 
-validateGuess :: Char -> [Char] -> String
-validateGuess guess letters
+validateGuess :: String -> [String] -> String
+validateGuess guess guesses
     -- Check that guessed char was a letter
-
+    | (length guess == 1) && not (isLetter (head guess)) = "Your guess " ++ guess ++ " is a not a letter. Guess again!"
     -- Check if the given guess has already been guessed
-    | (elem guess letters) = "You have already guessed that! Guess again!"
+    | (elem guess guesses) = "You have already guessed that! Guess again!"
+    | otherwise = ""
 
 
 -- | Run the actual gameplay
-gameplay :: Int -> String -> [Char] -> IO ()
-gameplay guessNumber word letters = do
+gameplay :: Int -> String -> [String] -> IO ()
+gameplay guessNumber word guesses = do
 
-    -- Show the player the letters they've guessed already
-    when (letters /= [])
-        (print("Guessed letters: " ++ printCharArray letters))
+    -- Show the player the guesses they've guessed already
+    when (guesses /= [])
+        (print("Previous guesses: " ++ (intercalate ", " guesses)))
 
     putStr "Guess a letter or the entire word: "
     guess <- getLine
 
-    -- Check if 
-    if (validateGuess (head guess) letters) /= "" then do
-        gameplay guessNumber word letters
+    -- Check that char was a letter and that the same thing wasn't guessed before
+    let validationResult = validateGuess guess guesses
+
+    if validationResult /= "" then do
+        putStrLn validationResult
+        gameplay guessNumber word guesses
         
     -- If the guess is new, hangle the guess
     else do
-
+        
         -- Call the guessing function
         let result = (takeAGuess guess word)
 
@@ -161,8 +171,5 @@ gameplay guessNumber word letters = do
             -- If there are guesses left, continue the game
             else do
                 putStrLn (guessesLeftMsg guessNumber)
+                gameplay (succ guessNumber) result (guesses ++ [guess])
 
-                if(length guess == 1) then
-                    gameplay (succ guessNumber) result (letters ++ guess)
-                else
-                    gameplay (succ guessNumber) result letters
