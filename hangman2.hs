@@ -54,7 +54,7 @@ maxGuesses = length drawing
 
 -- | Print the message of how many times the player can still guess wrong before dying
 guessesLeftMsg :: Int -> String
-guessesLeftMsg guessNumber = ("You have " ++ (show (maxGuesses - (succ guessNumber))) ++ " wrong guesses left")
+guessesLeftMsg guessNumber = ("You may fail " ++ (show (maxGuesses - (succ guessNumber))) ++ " more times.")
 
 
 {- |
@@ -66,15 +66,15 @@ guessesLeftMsg guessNumber = ("You have " ++ (show (maxGuesses - (succ guessNumb
 -}
 takeAGuess :: String -> String -> String
 takeAGuess guess word
-    | length guess > 1 = guessWord guess
-    | otherwise = guessChar (head guess) goalword word
+    | length guess > 1 = guessWord guess word
+    | otherwise = guessChar (toLower $ head guess) goalword word
 
 
--- | Guessing the entire word. If the guess is right, return the right word. Else return a message about guessing wrong.
-guessWord :: String -> String
-guessWord guess
+-- | Guessing the entire word. If the guess is right, return the right word. Else return the partially guessed word
+guessWord :: String -> String -> String
+guessWord guess word
     | guess == goalword = goalword
-    | otherwise = "Unfortunately your guess " ++ guess ++ " was wrong"
+    | otherwise = word
 
 
 {- | Check if a given character is in the string
@@ -85,8 +85,8 @@ guessWord guess
 guessChar :: Char -> String -> String -> String
 guessChar guess [] [] = ""
 guessChar guess (x:xs) (y:ys)
-    | guess == x = (charToString x) ++ guessChar guess xs ys
-    | elem y ['a'..'z'] = (charToString y) ++ guessChar guess xs ys
+    | guess == x = (charToString $ toUpper x) ++ guessChar guess xs ys
+    | elem y ['A'..'Z'] = (charToString y) ++ guessChar guess xs ys
     | otherwise = "*" ++ guessChar guess xs ys
 
 
@@ -162,6 +162,9 @@ gameplay guessNumber word guesses = do
         
         -- Call the guessing function
         let result = (takeAGuess guess word)
+
+        when (result == word)
+            (print("Unfortunately your guess " ++ guess ++ " was wrong"))
 
         -- Print the current state of the word
         putStrLn ("\nTHE WORD: " ++ result)
