@@ -19,9 +19,11 @@ hideWord [] = ""
 hideWord (x:xs) = "*" ++ (hideWord xs)
 
 
--- | The hangman drawing in 8 steps   
+-- | The hangman drawing in 9 steps   
 drawing :: [[String]]
 drawing = [
+    -- Nothing
+    ["\n", "\n", "\n", "\n", "\n", "\n", "\n"],
     -- The ground
     ["\n", "\n", "\n", "\n", "\n", "\n", "============"],
     -- Pole added
@@ -43,8 +45,8 @@ drawing = [
 -- | Draw the hangman drawing based on the provided number of wrong guesses
 drawHangman :: Int -> String
 drawHangman wrongGuesses
-    | wrongGuesses <= 6 = (intercalate "" (drawing !! wrongGuesses))
-    | otherwise = (intercalate " " (drawing !! 7))
+    | wrongGuesses < maxGuesses - 1 = (intercalate "" (drawing !! wrongGuesses))
+    | otherwise = (intercalate " " (last drawing))
 
 
 -- | The maximum number of available guesses
@@ -54,7 +56,7 @@ maxGuesses = length drawing
 
 -- | Print the message of how many times the player can still guess wrong before dying
 guessesLeftMsg :: Int -> String
-guessesLeftMsg guessNumber = ("You may fail " ++ (show (maxGuesses - (succ guessNumber))) ++ " more times.")
+guessesLeftMsg guessNumber = ("You may fail " ++ (show (maxGuesses - 1 - (succ guessNumber))) ++ " more times.")
 
 
 {- |
@@ -176,15 +178,23 @@ gameplay guessNumber word guesses = do
         -- If guess is wrong...
         else do
             -- Print the drawing
-            let drawing = drawHangman (succ guessNumber)
-            putStrLn drawing
+
 
             -- If all guesses have been used, the game ends
-            if (succ guessNumber) >= 9 then
+            if (succ guessNumber) >= maxGuesses then do
                 putStrLn "GAME OVER"
+                putStrLn ("The correct word would have been " ++ goalword)
 
             -- If there are guesses left, continue the game
             else do
-                putStrLn (guessesLeftMsg guessNumber)
-                gameplay (succ guessNumber) result (guesses ++ [lowerString guess])
+                -- If the guess was wrong, the player has fewer guesses left
+                if (result == word) then do
+                    putStrLn (drawHangman (succ guessNumber))
+                    putStrLn (guessesLeftMsg guessNumber)
+                    gameplay (succ guessNumber) result (guesses ++ [lowerString guess])
+
+                -- Otherwise the number of guesses stays the same
+                else do
+                    putStrLn (drawHangman guessNumber)
+                    gameplay guessNumber result (guesses ++ [lowerString guess])
 
