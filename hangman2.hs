@@ -147,7 +147,7 @@ gameplay guessNumber word guesses = do
     when (guesses /= [])
         (print("Previous guesses: " ++ (intercalate ", " guesses)))
 
-    putStr "Guess a letter or the entire word: "
+    putStr "Guess a letter or the entire word and press ENTER: "
     guess <- getLine
 
     -- Check that char was a letter and that the same thing wasn't guessed before
